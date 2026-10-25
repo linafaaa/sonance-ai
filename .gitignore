@@ -1,0 +1,30 @@
+# Python
+.venv/
+__pycache__/
+*.py[cod]
+
+# Audio files and datasets
+*.mp3
+*.wav
+*.flac
+*.m4a
+data/raw/
+data/processed/
+separated/
+
+# Model weights and generated outputs
+models/
+outputs/
+*.pth
+*.pt
+*.ckpt
+*.onnx
+
+# System and secrets
+.DS_Store
+.env
+.env.*
+!.env.example
+
+baseline_events.csv
+drum_waveform.png

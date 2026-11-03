@@ -2,28 +2,13 @@
 import { useEffect, useRef, useState } from "react";
 import "./App.css";
 
+const API_BASE_URL = (import.meta.env.VITE_API_URL || "http://127.0.0.1:8000").replace(/\/+$/, "");
+
 const stems = [
   { name: "Vocals", icon: "≋", color: "pink", value: 64 },
   { name: "Drums & Percussion", icon: "≋", color: "orange", value: 48 },
   { name: "Bass", icon: "≋", color: "green", value: 43 },
   { name: "Other", icon: "≋", color: "gray", value: 48 },
-];
-
-const tracks = [
-  { name: "Midnight", artist: "ODESZA", score: "92%", color: "sunset" },
-  { name: "Bloom", artist: "ODESZA", score: "87%", color: "ocean" },
-  { name: "A Moment Apart", artist: "ODESZA", score: "84%", color: "night" },
-  { name: "Something About You", artist: "ODESZA", score: "78%", color: "amber" },
-  { name: "Sun Models", artist: "ODESZA", score: "74%", color: "violet" },
-];
-
-const sections = [
-  { name: "Intro", time: "0:00 – 0:32", color: "#5085ff", width: 16 },
-  { name: "Verse", time: "0:32 – 1:08", color: "#a65aff", width: 16 },
-  { name: "Build", time: "1:08 – 1:46", color: "#ed78d8", width: 17 },
-  { name: "Drop", time: "1:46 – 2:28", color: "#4bd3cb", width: 19 },
-  { name: "Breakdown", time: "2:28 – 3:10", color: "#f7d96b", width: 19 },
-  { name: "Outro", time: "3:10 – 3:42", color: "#9080ff", width: 13 },
 ];
 
 const tabs = ["Overview", "Stems", "Structure", "MIDI", "Similar Tracks", "Learning"];
@@ -38,7 +23,7 @@ function SonanceMark({ animated = false }: { animated?: boolean }) {
   );
 }
 
-function Waveform({
+function PlaybackProgress({
   currentTime,
   duration,
   onSeek,
@@ -47,28 +32,25 @@ function Waveform({
   duration: number;
   onSeek: (time: number) => void;
 }) {
-  const svgRef = useRef<SVGSVGElement | null>(null);
+  const progressRef = useRef<HTMLDivElement | null>(null);
   const seekAt = (clientX: number) => {
-    const svg = svgRef.current;
-    if (!svg || duration <= 0) return;
-    const rect = svg.getBoundingClientRect();
+    const element = progressRef.current;
+    if (!element || duration <= 0) return;
+    const rect = element.getBoundingClientRect();
     const ratio = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
     onSeek(ratio * duration);
   };
 
   return (
-    <svg
-      ref={svgRef}
-      className="waveform"
-      viewBox="0 0 720 54"
-      preserveAspectRatio="none"
+    <div
+      ref={progressRef}
+      className="playback-progress"
       role="slider"
       aria-label="Audio position"
       aria-valuemin={0}
       aria-valuemax={duration}
       aria-valuenow={currentTime}
       tabIndex={0}
-      style={{ cursor: duration > 0 ? "pointer" : "default", touchAction: "none" }}
       onClick={(event) => seekAt(event.clientX)}
       onPointerDown={(event) => {
         if (duration <= 0) return;
@@ -83,57 +65,11 @@ function Waveform({
         if (event.key === "ArrowLeft") onSeek(Math.max(0, currentTime - 5));
       }}
     >
-      {Array.from({ length: 180 }, (_, i) => {
-        const envelope = 7 + Math.sin(i * 0.12) * 8 + Math.sin(i * 0.047) * 10;
-        const noise = Math.abs(Math.sin(i * 12.9898) * Math.cos(i * 4.141));
-        const h = Math.max(3, envelope * noise + 3);
-        const played = duration > 0 && i / 180 <= currentTime / duration;
-        return (
-          <line
-            key={i}
-            x1={i * 4 + 1}
-            x2={i * 4 + 1}
-            y1={27 - h}
-            y2={27 + h}
-            stroke={played ? "#b68cff" : `hsl(${210 + (i / 180) * 90} 95% 68%)`}
-            strokeWidth="1.7"
-            strokeLinecap="round"
-          />
-        );
-      })}
-    </svg>
-  );
-}
-
-function EnergyMap() {
-  return (
-    <svg className="energy-chart" viewBox="0 0 760 100" preserveAspectRatio="none">
-      <defs>
-        <linearGradient id="energyFill" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#bd79ff" stopOpacity=".6" />
-          <stop offset="100%" stopColor="#70a5ff" stopOpacity=".08" />
-        </linearGradient>
-        <linearGradient id="energyLine">
-          <stop offset="0%" stopColor="#4189ff" />
-          <stop offset="55%" stopColor="#c26cff" />
-          <stop offset="100%" stopColor="#4bbdff" />
-        </linearGradient>
-      </defs>
-      {[15, 38, 61, 84].map((y) => (
-        <line key={y} x1="0" y1={y} x2="760" y2={y} className="chart-grid" />
-      ))}
-      <path
-        d="M0 78 C30 75 40 57 70 61 S115 39 145 47 S185 35 215 44 S250 67 282 43 S320 39 340 51 S360 67 380 46 S420 44 450 31 S500 25 525 33 S560 16 585 35 S610 58 635 43 S670 57 695 51 S730 67 760 71 L760 100 L0 100Z"
-        fill="url(#energyFill)"
+      <span
+        className="playback-progress-fill"
+        style={{ width: duration > 0 ? `${(currentTime / duration) * 100}%` : "0%" }}
       />
-      <path
-        d="M0 78 C30 75 40 57 70 61 S115 39 145 47 S185 35 215 44 S250 67 282 43 S320 39 340 51 S360 67 380 46 S420 44 450 31 S500 25 525 33 S560 16 585 35 S610 58 635 43 S670 57 695 51 S730 67 760 71"
-        fill="none"
-        stroke="url(#energyLine)"
-        strokeWidth="1.5"
-      />
-      <line x1="355" y1="12" x2="355" y2="91" stroke="#a65aff" strokeWidth="1.5" />
-    </svg>
+    </div>
   );
 }
 
@@ -148,7 +84,6 @@ function App() {
   const stemAudioRefs = useRef<Record<string, HTMLAudioElement>>({});
   const audioContextRef = useRef<AudioContext | null>(null);
   const stemGainRefs = useRef<Record<string, GainNode>>({});
-  const demoInitializedRef = useRef(false);
 
   const formatTime = (seconds: number) => {
     if (!Number.isFinite(seconds) || seconds < 0) return "0:00";
@@ -168,7 +103,7 @@ function App() {
         const audioContext = audioContextRef.current;
         if (audioContext) await audioContext.resume();
 
-        mainAudio.volume = 0;
+        mainAudio.volume = stemAudios.length > 0 ? 0 : 1;
         await Promise.all(stemAudios.map(async (audio) => {
           audio.currentTime = mainAudio.currentTime;
           await audio.play();
@@ -190,7 +125,6 @@ function App() {
 
 
   const [activeMenu, setActiveMenu] = useState("Analyze");
-  const [saved, setSaved] = useState(false);
   const [levels, setLevels] = useState(stems.map(() => 100));
 const [mutedStems, setMutedStems] = useState<string[]>([]);
   const [fileName, setFileName] = useState("");
@@ -219,88 +153,28 @@ const [genreResult, setGenreResult] = useState<{
 
 
   useEffect(() => {
-    if (demoInitializedRef.current) return;
-    demoInitializedRef.current = true;
-
-    const demoTrackId = "2c6e5722ab694a3a90069792bb1a7ccf";
-
-    const demoData: NonNullable<typeof genreResult> = {
-      track_id: demoTrackId,
-      genre: "Rock",
-      bpm: 117.5,
-      key: "G Minor",
-      energy: 1.0,
-      loudness_db: -10.2,
-      acousticness: 0.78,
-      danceability: 1.114,
-      valence: 6.116,
-      arousal: 5.082,
-      spectral_centroid_hz: 1758.9,
-      spectral_bandwidth_hz: 2120.2,
-      zero_crossing_rate: 0.0697,
-      subgenre: "Alternative Rock",
-      related_subgenres: ["Pop Rock", "Indie Rock", "Brit Pop"],
-    };
-
-    const audioContext = new AudioContext();
-    audioContextRef.current = audioContext;
-    stemGainRefs.current = {};
-
-    const newStemAudios: Record<string, HTMLAudioElement> = {};
-
-    ["vocals", "drums", "bass", "other"].forEach((name) => {
-      const audio = new Audio(
-        "http://" + "127.0.0.1:8000/stems/" + demoTrackId + "/" + name
-      );
-      audio.crossOrigin = "anonymous";
-      audio.preload = "auto";
-      audio.volume = 1;
-
-      const source = audioContext.createMediaElementSource(audio);
-      const gain = audioContext.createGain();
-      gain.gain.value = 1;
-      source.connect(gain);
-      gain.connect(audioContext.destination);
-
-      stemGainRefs.current[name] = gain;
-      newStemAudios[name] = audio;
-    });
-
-    stemAudioRefs.current = newStemAudios;
-    setFileName("Metric - Help I'm Alive.aac");
-    setTrackTitle("Help I'm Alive");
-    setTrackArtist("Metric");
-    setCoverUrl(null);
-    setAudioUrl("/demo-track.aac");
-    setDuration(0);
-    setCurrentTime(0);
-    setPlaying(false);
-    setMutedStems([]);
-    setLevels(stems.map(() => 100));
-    setSaved(false);
-    setActiveTab("Overview");
-    setGenreResult(demoData);
-    setAnalysisError("");
-    setAnalyzing(false);
-
     return () => {
-      Object.values(newStemAudios).forEach((audio) => {
+      Object.values(stemAudioRefs.current).forEach((audio) => {
         audio.pause();
         audio.removeAttribute("src");
         audio.load();
       });
+      stemAudioRefs.current = {};
+      stemGainRefs.current = {};
 
-      if (stemAudioRefs.current === newStemAudios) {
-        stemAudioRefs.current = {};
-        stemGainRefs.current = {};
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current.removeAttribute("src");
+        audioRef.current.load();
+        if (audioRef.current.src.startsWith("blob:")) {
+          URL.revokeObjectURL(audioRef.current.src);
+        }
       }
 
-      if (audioContextRef.current === audioContext) {
+      if (audioContextRef.current) {
+        void audioContextRef.current.close();
         audioContextRef.current = null;
-        void audioContext.close();
       }
-
-      demoInitializedRef.current = false;
     };
   }, []);
 
@@ -311,10 +185,8 @@ const handleUpload = async (file?: File) => {
   setTrackTitle(file.name.replace(/\\.[^.]+$/, ""));
   setTrackArtist("");
   setCoverUrl(null);
-  setAudioUrl((previous) => {
-    if (previous) URL.revokeObjectURL(previous);
-    return URL.createObjectURL(file);
-  });
+  if (audioUrl?.startsWith("blob:")) URL.revokeObjectURL(audioUrl);
+  setAudioUrl(URL.createObjectURL(file));
   setPlaying(false);
   setCurrentTime(0);
   setDuration(0);
@@ -325,6 +197,7 @@ const handleUpload = async (file?: File) => {
     audio.load();
   });
   stemAudioRefs.current = {};
+  stemGainRefs.current = {};
   setMutedStems([]);
   setLevels(stems.map(() => 100));
 
@@ -337,7 +210,7 @@ const handleUpload = async (file?: File) => {
     formData.append("file", file);
 
     const response = await fetch(
-      "http://" + "127.0.0.1:8000/analyze/genre",
+      `${API_BASE_URL}/analyze/genre`,
       {
         method: "POST",
         body: formData,
@@ -345,7 +218,8 @@ const handleUpload = async (file?: File) => {
     );
 
     if (!response.ok) {
-      throw new Error("Failed to analyze audio file");
+      const errorData = await response.json().catch(() => null);
+      throw new Error(errorData?.detail || "Failed to analyze audio file");
     }
 
     const data = await response.json();
@@ -358,7 +232,7 @@ const handleUpload = async (file?: File) => {
 
     stemNames.forEach((name) => {
       const audio = new Audio(
-        "http://" + "127.0.0.1:8000/stems/" + data.track_id + "/" + name
+        `${API_BASE_URL}/stems/${data.track_id}/${name}`
       );
       audio.crossOrigin = "anonymous";
       audio.preload = "auto";
@@ -410,6 +284,8 @@ const handleUpload = async (file?: File) => {
             <button
               key={label}
               className={`nav-item ${activeMenu === label ? "selected" : ""}`}
+              disabled={label === "Learn" || label === "Explore" || label === "Library"}
+              title={label === "Learn" || label === "Explore" || label === "Library" ? "In development" : undefined}
               onClick={() => {
                 setActiveMenu(label);
                 if (label === "Analyze") {
@@ -451,8 +327,8 @@ const handleUpload = async (file?: File) => {
             <p className="landing-eyebrow">MUSIC INTELLIGENCE PLATFORM</p>
             <h1>Hear music.<br />Understand everything.</h1>
             <p className="landing-description">
-              Discover the DNA behind every track. Explore sound, rhythm,
-              mood and structure with AI-powered music analysis.
+              Upload a track to analyse its genre, tempo, key, mood estimates
+              and separated audio stems. More music tools are in development.
             </p>
             <button
               className="landing-cta"
@@ -475,15 +351,17 @@ const handleUpload = async (file?: File) => {
             </article>
             <article className="landing-feature">
               <span>◈</span>
-              <h2>Sound in motion</h2>
-              <p>See how energy and song structure evolve over time.</p>
+              <h2>Track structure</h2>
+              <p>Song sections and energy mapping — in development.</p>
             </article>
           </section>
         </main>
       ) : (
         <main className="main-content">
         <div className="track-heading">
-          <div className="back-link">← <span>Back to library</span></div>
+          <button type="button" className="back-link" onClick={() => document.getElementById("upload")?.click()}>
+            ← <span>Choose another track</span>
+          </button>
           <div className="track-info">
             <div className="cover-art">
               {coverUrl ? (
@@ -494,16 +372,16 @@ const handleUpload = async (file?: File) => {
               {!coverUrl && <div className="cover-shine" />}
             </div>
             <div className="track-details">
-              <h1>{trackTitle || "Afterglow"}</h1>
-              <p className="artist">{trackArtist || (fileName ? "ARTIST NOT TAGGED" : "ODESZA")}</p>
+              <h1>{trackTitle || "No track selected"}</h1>
+              <p className="artist">{trackArtist || (fileName ? "Artist not tagged" : "Upload audio to begin")}</p>
               <div className="track-meta">
                 <span>◷ &nbsp;{formatTime(duration)}</span><span>♧ &nbsp;{genreResult?.bpm != null ? `${Math.round(genreResult.bpm)} BPM` : "BPM —"}</span><span>♬ &nbsp;{genreResult?.key ?? "Key —"}</span>
                 <span>♧ &nbsp;{genreResult?.genre ?? "Genre pending"}</span>
                 <span>♡ &nbsp;{genreResult?.subgenre ?? "Subgenre pending"}</span>
               </div>
             </div>
-            <button className={`save-button ${saved ? "saved" : ""}`} onClick={() => setSaved(!saved)}>
-              ♧ &nbsp;{saved ? "Saved to library" : "Save to library"}
+            <button className="save-button" type="button" disabled title="Library is in development">
+              Library · In development
             </button>
           </div>
         </div>
@@ -520,7 +398,7 @@ const handleUpload = async (file?: File) => {
           <button className="play-button" onClick={togglePlayback} disabled={!audioUrl} aria-label={playing ? "Pause" : "Play"}>
             {playing ? "Ⅱ" : "▶"}
           </button>
-          <Waveform
+          <PlaybackProgress
             currentTime={currentTime}
             duration={duration}
             onSeek={(time) => {
@@ -576,41 +454,111 @@ const handleUpload = async (file?: File) => {
             }}
           />
         </div>
-        {activeTab === "Overview" && <>
-          <section className="panel dna-panel">
-            <div className="section-title"><span className="section-symbol">✦</span><div><h2>Music DNA</h2><p>The key elements of this track</p></div></div>
-            <div className="dna-content">
-              <div className="metric"><small>Primary genre</small><strong>{genreResult?.genre ?? "—"}</strong><em>{genreResult?.subgenre ?? "Upload a track to analyze"}</em></div>
-              <div className="metric"><small>Mood</small><strong>{genreResult?.valence != null && genreResult?.arousal != null ? (genreResult.valence >= 6 && genreResult.arousal >= 6 ? "Euphoric" : genreResult.valence >= 6 && genreResult.arousal < 4.5 ? "Calm" : genreResult.valence < 4.5 && genreResult.arousal >= 6 ? "Tense" : genreResult.valence < 4.5 && genreResult.arousal < 4.5 ? "Melancholic" : genreResult.arousal >= 6 ? "Energetic" : genreResult.arousal < 4.5 ? "Relaxed" : genreResult.valence >= 5 ? "Warm" : "Reflective") : "—"}</strong><span>{genreResult?.arousal != null ? `Arousal ${genreResult.arousal.toFixed(1)} / 9` : "Awaiting analysis"}</span><em className="blue-tag">DEAM emotion model</em></div>
-              <div className="metric"><small>Key</small><strong>{genreResult?.key ?? "—"}</strong><span>Detected key</span></div>
-              <div className="metric"><small>BPM</small><strong>{genreResult?.bpm != null ? Math.round(genreResult.bpm) : "—"}</strong><span>Detected tempo</span></div>
-              <div className="metric energy-metric"><small>Energy</small><strong>{genreResult?.energy != null ? (genreResult.energy >= 0.7 ? "High" : genreResult.energy >= 0.35 ? "Medium" : "Low") : "—"}</strong><span>{genreResult?.energy != null ? `${Math.round(genreResult.energy * 100)}% estimated` : "Awaiting analysis"}</span></div>
-              <div className="radar"><div className="radar-ring"><div className="radar-core" /></div></div>
-              <div className="traits"><div><span>Danceability</span><strong>{genreResult?.danceability != null ? genreResult.danceability.toFixed(2) : "—"}</strong></div><div><span>Acousticness*</span><strong>{genreResult?.acousticness != null ? `${Math.round(genreResult.acousticness * 100)}%` : "—"}</strong></div><div><span>Valence (1–9)</span><strong>{genreResult?.valence != null ? genreResult.valence.toFixed(1) : "—"}</strong></div><div><span>Loudness</span><strong>{genreResult?.loudness_db != null ? `${genreResult.loudness_db} dB` : "—"}</strong></div></div>
+        {activeTab === "Overview" && (
+          genreResult ? (
+            <>
+              <section className="panel dna-panel">
+                <div className="section-title">
+                  <span className="section-symbol">✦</span>
+                  <div>
+                    <h2>Music DNA</h2>
+                    <p>Estimated properties from the uploaded track</p>
+                  </div>
+                </div>
+                <div className="dna-content">
+                  <div className="metric">
+                    <small>Primary genre</small>
+                    <strong>{genreResult.genre}</strong>
+                    <em>{genreResult.subgenre ?? "No subgenre returned"}</em>
+                  </div>
+                  <div className="metric">
+                    <small>Mood estimate</small>
+                    <strong>
+                      {genreResult.valence >= 6 && genreResult.arousal >= 6 ? "Euphoric" :
+                        genreResult.valence >= 6 && genreResult.arousal < 4.5 ? "Calm" :
+                        genreResult.valence < 4.5 && genreResult.arousal >= 6 ? "Tense" :
+                        genreResult.valence < 4.5 && genreResult.arousal < 4.5 ? "Melancholic" :
+                        genreResult.arousal >= 6 ? "Energetic" :
+                        genreResult.arousal < 4.5 ? "Relaxed" :
+                        genreResult.valence >= 5 ? "Warm" : "Reflective"}
+                    </strong>
+                    <span>Valence {genreResult.valence.toFixed(1)} · Arousal {genreResult.arousal.toFixed(1)}</span>
+                    <em className="blue-tag">DEAM model estimate</em>
+                  </div>
+                  <div className="metric">
+                    <small>Key estimate</small>
+                    <strong>{genreResult.key}</strong>
+                    <span>Chroma profile</span>
+                  </div>
+                  <div className="metric">
+                    <small>Tempo estimate</small>
+                    <strong>{Math.round(genreResult.bpm)} BPM</strong>
+                    <span>Detected from audio</span>
+                  </div>
+                  <div className="metric">
+                    <small>Loudness</small>
+                    <strong>{genreResult.loudness_db.toFixed(1)} dB</strong>
+                    <span>Mean RMS level</span>
+                  </div>
+                  <div className="traits">
+                    <div><span>Danceability</span><strong>{genreResult.danceability.toFixed(2)}</strong></div>
+                    <div><span>Harmonic share*</span><strong>{Math.round(genreResult.acousticness * 100)}%</strong></div>
+                    <div><span>Spectral centroid</span><strong>{Math.round(genreResult.spectral_centroid_hz)} Hz</strong></div>
+                    <div><span>Spectral bandwidth</span><strong>{Math.round(genreResult.spectral_bandwidth_hz)} Hz</strong></div>
+                  </div>
+                </div>
+                <p className="analysis-note">
+                  Mood and genre are model estimates. *Harmonic share is a signal-derived harmonic/percussive balance, not a trained acousticness prediction.
+                </p>
+              </section>
+              <section className="panel development-panel">
+                <span className="development-tag">IN DEVELOPMENT</span>
+                <h2>Track Structure &amp; Energy Map</h2>
+                <p>Song-section detection and time-aligned energy analysis are not connected yet. No sample timeline is shown as if it came from this track.</p>
+              </section>
+            </>
+          ) : (
+            <section className="panel empty-analysis-state">
+              <div className="empty-analysis-mark"><SonanceMark /></div>
+              <span className="development-tag">READY FOR ANALYSIS</span>
+              <h2>Start with a track</h2>
+              <p>Upload an audio file to calculate its genre, tempo, key, mood estimates and separated stems.</p>
+              <button type="button" className="landing-cta" onClick={() => document.getElementById("upload")?.click()}>
+                Choose audio file <span>→</span>
+              </button>
+            </section>
+          )
+        )}
+
+        {activeTab !== "Overview" && (
+          <section className="panel alternate-panel">
+            <div className="section-title">
+              <span className="section-symbol">✦</span>
+              <div>
+                <h2>{activeTab}</h2>
+                <p>{activeTab === "Stems" ? "Real separated audio from the current analysis" : "This module is not connected yet"}</p>
+              </div>
             </div>
+            {activeTab === "Stems" ? (
+              genreResult ? (
+                <p>Use the stem mixer in the right panel to mute layers and adjust their levels.</p>
+              ) : (
+                <p>Upload a track and wait for separation to finish. Available stems will appear in the right panel.</p>
+              )
+            ) : (
+              <div className="development-message">
+                <span className="development-tag">IN DEVELOPMENT</span>
+                <p>
+                  {activeTab === "Structure" && "Automatic song-section detection and time-aligned energy analysis are planned for a later release."}
+                  {activeTab === "MIDI" && "MIDI extraction and export are not implemented yet."}
+                  {activeTab === "Similar Tracks" && "Track similarity and recommendations are not connected to an analysis model yet."}
+                  {activeTab === "Learning" && "Interactive listening lessons and exercises are planned for a later release."}
+                </p>
+              </div>
+            )}
           </section>
-
-          <section className="panel structure-panel">
-            <div className="section-title"><span className="section-symbol">♧</span><div><h2>Track Structure</h2><p>Song sections and energy flow</p></div></div>
-            <div className="structure-bar">{sections.map((s) => <div key={s.name} style={{ width: `${s.width}%`, background: s.color }} />)}</div>
-            <div className="time-labels"><span>0:00</span><span>0:32</span><span>1:08</span><span>1:46</span><span>2:28</span><span>3:10</span><span>3:42</span></div>
-            <div className="legend">{sections.map((s) => <div key={s.name}><span className="legend-dot" style={{ background: s.color }} /><div><strong>{s.name}</strong><small>{s.time}</small></div></div>)}</div>
-          </section>
-
-          <section className="panel chart-panel">
-            <div className="section-title"><span className="section-symbol">♧</span><div><h2>Energy Map</h2><p>How the intensity changes</p></div></div>
-            <div className="chart-wrap"><div className="chart-labels"><span>High</span><span>Low</span></div><EnergyMap /></div>
-            <div className="chart-times"><span>0:00</span><span>0:32</span><span>1:08</span><span>1:46</span><span>2:28</span><span>3:10</span><span>3:42</span></div>
-          </section>
-        </>}
-
-        {activeTab !== "Overview" && <section className="panel alternate-panel">
-          <div className="section-title"><span className="section-symbol">✦</span><div><h2>{activeTab}</h2><p>Explore the details of your music</p></div></div>
-          {activeTab === "Stems" ? <p>Use the individual stem controls in the right panel to adjust levels. Real stem separation will be connected to the audio backend later.</p> :
-            activeTab === "Structure" ? <><div className="structure-bar">{sections.map((s) => <div key={s.name} style={{ width: `${s.width}%`, background: s.color }} />)}</div><div className="legend">{sections.map((s) => <div key={s.name}><span className="legend-dot" style={{ background: s.color }} /><div><strong>{s.name}</strong><small>{s.time}</small></div></div>)}</div></> :
-            <p>This workspace is prepared for the {activeTab.toLowerCase()} module. Its analysis features will be implemented in later steps.</p>}
-        </section>}
-        <footer>SONANCE AI <span>Music intelligence, reimagined.</span><span>DEMO DATA · NOT LIVE ANALYSIS</span></footer>
+        )}
+        <footer>SONANCE AI <span>Music intelligence, reimagined.</span><span>{genreResult ? "ANALYSIS ESTIMATES · NOT GROUND TRUTH" : "NO TRACK LOADED"}</span></footer>
         </main>
       )}
 
@@ -698,15 +646,17 @@ const handleUpload = async (file?: File) => {
         </section>
 
         <section className="panel similar-panel">
-          <div className="similar-heading"><div className="section-title"><span className="section-symbol">✣</span><div><h2>Similar Tracks</h2><p>Based on genre, mood and structure</p></div></div><button onClick={() => setActiveTab("Similar Tracks")}>See all</button></div>
-          {tracks.map((track) => <div className="similar-track" key={track.name}>
-            <div className={`mini-cover ${track.color}`}><span>✦</span></div>
-            <div className="similar-info"><strong>{track.name}</strong><small>{track.artist}</small></div>
-            <span className="score">{track.score}</span>
-          </div>)}
+          <div className="section-title">
+            <span className="section-symbol">✣</span>
+            <div><h2>Similar Tracks</h2><p>Recommendations based on track similarity</p></div>
+          </div>
+          <div className="development-message">
+            <span className="development-tag">IN DEVELOPMENT</span>
+            <p>No recommendations are generated yet. This area will be connected to a similarity model.</p>
+          </div>
         </section>
 
-        <button className="learn-card" onClick={() => setActiveTab("Learning")}><span className="learn-spark">✦</span><span><strong>Learn more about this sound</strong><small>Get AI-powered lessons and exercises</small></span><span className="learn-arrow">→</span></button>
+        <button className="learn-card" onClick={() => setActiveTab("Learning")}><span className="learn-spark">✦</span><span><strong>Learning tools</strong><small>Interactive lessons · In development</small></span><span className="learn-arrow">→</span></button>
       </aside>}
     {analyzing && (
       <div className="sonance-loading-overlay" role="status" aria-live="polite">

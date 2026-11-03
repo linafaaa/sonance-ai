@@ -1692,3 +1692,116 @@ body {
 .sonance-loading-overlay {
   inset: 0 0 0 var(--sonance-sidebar-width);
 }
+
+
+/* Honest empty states and real-audio playback progress */
+.nav-item:disabled {
+  opacity: 0.42;
+  cursor: not-allowed;
+}
+
+.playback-progress {
+  position: relative;
+  flex: 1;
+  min-width: 80px;
+  height: 8px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(135, 145, 170, 0.2);
+  cursor: pointer;
+  touch-action: none;
+}
+
+.playback-progress-fill {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #8a7cff, #b18cff);
+  pointer-events: none;
+}
+
+.empty-analysis-state {
+  min-height: 300px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  text-align: center;
+  padding: 40px 24px;
+}
+
+.empty-analysis-state h2,
+.development-panel h2 {
+  margin: 4px 0;
+}
+
+.empty-analysis-state p,
+.development-panel p,
+.development-message p,
+.analysis-note {
+  max-width: 620px;
+  color: var(--muted, #8994ad);
+  line-height: 1.65;
+}
+
+.empty-analysis-mark {
+  margin-bottom: 4px;
+}
+
+.development-panel {
+  margin-top: 18px;
+  padding: 24px;
+}
+
+.development-tag {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  border: 1px solid rgba(138, 124, 255, 0.28);
+  border-radius: 999px;
+  padding: 5px 9px;
+  color: #8a7cff;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 1.4px;
+}
+
+.development-message {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 16px 0 4px;
+}
+
+.analysis-note {
+  margin: 12px 0 0;
+  font-size: 11px;
+}
+
+.back-link {
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.save-button:disabled {
+  opacity: 0.58;
+  cursor: not-allowed;
+}
+
+.dark .playback-progress {
+  background: rgba(210, 215, 235, 0.16);
+}
+
+.dark .empty-analysis-state p,
+.dark .development-panel p,
+.dark .development-message p,
+.dark .analysis-note {
+  color: #a0a9bf;
+}

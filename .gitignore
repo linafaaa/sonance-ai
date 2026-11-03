@@ -28,3 +28,23 @@ outputs/
 
 baseline_events.csv
 drum_waveform.png
+
+# Local Essentia build and environments
+.venv-essentia/
+essentia-local/
+
+# Runtime data and uploaded audio
+uploads/
+data/
+*.aac
+
+# Frontend build and dependencies
+web/node_modules/
+web/dist/
+web/coverage/
+
+# Backups and local diagnostics
+*.backup
+*.backup-*
+*.log
+2026-10-26 00.52.42.jpg

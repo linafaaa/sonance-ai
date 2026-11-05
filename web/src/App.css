@@ -1,5 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap');
-
+@import url("https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap");
 :root {
   font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
   color: #15223d;
@@ -282,8 +281,23 @@ button:focus-visible, input:focus-visible { outline: 2px solid #829eff; outline-
   cursor: not-allowed;
 }
 
-.waveform { flex: 1; width: 0; height: 54px; overflow: visible; }
-.duration { color: #687a9b; font-size: 11px; }
+.waveform {
+  flex: 1 1 0;
+  width: 0;
+  min-width: 0;
+  height: 54px;
+  overflow: visible;
+}
+.duration {
+  flex: 0 0 88px;
+  width: 88px;
+  min-width: 88px;
+  color: #687a9b;
+  font-size: 11px;
+  white-space: nowrap;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
 
 .upload-strip {
   display: flex;
@@ -1173,7 +1187,11 @@ body {
 
 /* Keep header actions aligned to the right */
 .topbar {
-  justify-content: flex-end;
+  justify-content: space-between;
+}
+
+.topbar .back-link {
+  margin-bottom: 0;
 }
 
 .top-actions {
@@ -1514,7 +1532,7 @@ body {
 /* Music DNA layout fix */
 @media (min-width: 1351px) {
   .dna-content {
-    grid-template-columns: repeat(5, minmax(0, 1fr)) minmax(0, 0.8fr) minmax(150px, 1.2fr);
+    grid-template-columns: repeat(5, minmax(0, 1fr)) minmax(190px, 1.5fr);
     align-items: stretch;
     gap: 12px;
   }
@@ -1546,7 +1564,8 @@ body {
   }
 
   .traits span {
-    overflow-wrap: anywhere;
+    min-width: 0;
+    overflow-wrap: normal;
   }
 }
 
@@ -1804,4 +1823,570 @@ body {
 .dark .development-message p,
 .dark .analysis-note {
   color: #a0a9bf;
+}
+
+/* Temporary layout alignment check */
+@media (min-width: 1001px) {
+  .app { grid-template-rows: 80px minmax(0, 1fr); }
+  .main-content, .rightbar { align-self: stretch; }
+}
+
+
+
+/* Geometrically centered player controls */
+.play-button { background: linear-gradient(145deg, #7187ff, #7655d9) !important; color: #fff; }
+.play-icon { display: block; width: 0; height: 0; border-top: 7px solid transparent; border-bottom: 7px solid transparent; border-left: 11px solid #fff; transform: translateX(1.5px); }
+.play-icon.is-playing { width: 12px; height: 14px; border: 0; transform: none; background: linear-gradient(to right, #fff 0 4px, transparent 4px 8px, #fff 8px 12px); }
+
+/* SONANCE visual polish */
+.metric { align-items:flex-start; gap:8px; padding:15px 13px; border-radius:14px; text-align:left; }
+.metric small { color:#7486a7; font-size:10px; font-weight:400; letter-spacing:0; line-height:1.35; }
+.metric strong { color:#202e4b; font-size:11px; font-weight:500; letter-spacing:0; line-height:1.25; overflow-wrap:anywhere; }
+.metric > span { color:#647695; font-size:10px; line-height:1.45; }
+.metric em { align-self:flex-start; max-width:100%; margin-top:auto; padding:5px 8px; border-radius:7px; font-size:9px; font-weight:400; line-height:1.35; white-space:normal; overflow-wrap:anywhere; }
+.metric em.blue-tag { background:#edf1ff; color:#6571c9; border:1px solid #e1e6ff; }
+.traits { justify-content:flex-start; gap:9px; padding-left:14px; border-left:1px solid #e9edf5; }
+.traits div { gap:8px; }
+.traits span { color:#8491a9; font-size:9px; line-height:1.35; }
+.traits strong { color:#354463; font-size:10px; font-weight:500; }
+.back-link { display:inline-flex; align-items:center; gap:9px; min-height:34px; margin-bottom:16px; padding:0 12px; border:1px solid #e5eaf4; border-radius:10px; background:#fff; color:#53678f; font-size:10px; font-weight:600; transition:background .18s,border-color .18s,color .18s,transform .18s; }
+.back-link span { margin-left:0; }
+.back-link:hover { border-color:#d8defe; background:#f5f6ff; color:#5b63c9; transform:translateX(-2px); }
+.back-chevron { display:block; width:7px; height:7px; flex:0 0 7px; border-left:1.6px solid currentColor; border-bottom:1.6px solid currentColor; transform:rotate(45deg); }
+.development-panel { display:flex; min-height:164px; flex-direction:column; align-items:center; justify-content:center; gap:11px; padding:28px 24px; text-align:center; }
+.development-panel .development-tag { align-self:center; }
+.development-panel h2 { margin:0; color:var(--text); font-size:17px; font-weight:700; letter-spacing:-.35px; line-height:1.3; text-align:center; }
+.development-panel p { width:100%; max-width:560px; margin:0 auto; font-size:11px; line-height:1.65; text-align:center; }
+.dark .metric strong,.dark .traits strong { color:#edf1ff; }
+.dark .metric small,.dark .metric > span,.dark .traits span { color:#9ba9c5; }
+.dark .traits { border-left-color:#303a52; }
+.dark .metric em.blue-tag { border-color:#394467; background:#293452; color:#a9b5ff; }
+.dark .back-link { border-color:#303a52; background:#20283b; color:#b8c5e4; }
+.dark .back-link:hover { border-color:#50558a; background:#292d49; color:#c6c9ff; }
+@media (max-width:560px) { .traits { border-left:0; padding-left:0; } .metric { padding:12px 10px; } .metric strong { font-size:14px; } .development-panel { padding:24px 16px; } .development-panel h2 { font-size:15px; } }
+
+
+/* Final responsive and theme corrections */
+.app, .app button, .app input { font-family: 'Inter', sans-serif; }
+.app h1, .app h2, .app .brand, .app .development-panel h2 { font-family: 'Manrope', sans-serif; }
+.app .track-details h1 { font-family: 'Manrope', sans-serif; font-weight: 600; }
+.metric small { font-size: 9px; font-weight: 600; letter-spacing: .55px; text-transform: uppercase; }
+.metric strong { font-size: 15px; font-weight: 650; letter-spacing: -.25px; line-height: 1.3; }
+.metric > span { font-size: 10px; }
+.traits { justify-content: space-evenly; }
+.traits strong { font-size: 12px; font-weight: 650; line-height: 1.35; }
+.traits span { font-size: 9px; letter-spacing: .25px; }
+@media (min-width: 1351px) {
+  .dna-content { align-items: stretch; }
+  .dna-content > .traits { height: 100%; min-height: 112px; justify-content: space-evenly; gap: 10px; padding: 4px 0; }
+}
+@media (max-width: 560px) {
+  .player { min-height: 82px; height: auto; gap: 10px; }
+  .waveform { height: 58px; min-width: 0; }
+  .metric strong { font-size: 14px; }
+  .traits { justify-content: space-between; }
+  .stem-row { grid-template-columns: 36px minmax(75px, 1fr) minmax(60px, 1.15fr) 38px; gap: 8px; }
+  .stem-icon { width: 34px; height: 34px; }
+  .stem-name { font-size: 12px; }
+  .stem-level { font-size: 11px; }
+}
+.app.dark { color-scheme: dark; }
+.app:not(.dark) { color-scheme: light; }
+.app.dark .upload-strip { color: #b1bdd6; border-color: #3a4560; background: #1a2234; }
+.app.dark .duration, .app.dark .stem-name, .app.dark .stem-level { color: #b6c2dc; }
+.app.dark .analysis-status, .app.dark .section-title p, .app.dark footer { color: #a6b2cc; }
+.app.dark .development-message p, .app.dark .alternate-panel > p { color: #aeb9d0; }
+.app.dark .stem-row input[type="range"] { accent-color: #9aabff; }
+.app.dark .search input { color: #eef2ff; }
+.app.dark .metric em { color: #d0c2ff; background: #302a48; }
+.app.dark .metric em.blue-tag { color: #b8c8ff; background: #293452; }
+body:has(.app.dark) { background: #111522; }
+body:has(.app:not(.dark)) { background: #E9EDF4; }
+
+/* SONANCE dark theme — stem icon palette */
+.app.dark .stem-icon.pink {
+  color: #FF91C8;
+  background: #39243B;
+  box-shadow: inset 0 0 0 1px #754365;
+}
+.app.dark .stem-icon.orange {
+  color: #FFC078;
+  background: #3A2D25;
+  box-shadow: inset 0 0 0 1px #765137;
+}
+.app.dark .stem-icon.green {
+  color: #79E2C7;
+  background: #203B3A;
+  box-shadow: inset 0 0 0 1px #376D68;
+}
+.app.dark .stem-icon.blue {
+  color: #8EBBFF;
+  background: #243451;
+  box-shadow: inset 0 0 0 1px #405D8A;
+}
+.app.dark .stem-icon.purple {
+  color: #B9A0FF;
+  background: #302A49;
+  box-shadow: inset 0 0 0 1px #574A83;
+}
+.app.dark .stem-icon.gray {
+  color: #B8C5DD;
+  background: #293348;
+  box-shadow: inset 0 0 0 1px #46536D;
+}
+.app.dark .stem-icon:not(:disabled):hover {
+  filter: brightness(1.16);
+  transform: translateY(-1px);
+}
+.app.dark .stem-icon.stem-muted {
+  opacity: .55;
+  filter: saturate(.55);
+}
+
+/* Unified workspace colors */
+.app:not(.dark) { --border: #E7EBF3; }
+.app:not(.dark) .topbar,
+.app:not(.dark) .sidebar,
+.app:not(.dark) .rightbar { background: #F5F7FB !important; }
+.app.dark { --bg: #111522; --border: #293147; }
+.app.dark .topbar,
+.app.dark .sidebar,
+.app.dark .rightbar { background: #111725 !important; border-color: #293147 !important; }
+.app.dark .topbar { border-bottom: 1px solid #293147 !important; }
+
+
+/* Unified outer frame — restore original light appearance */
+.app:not(.dark) {
+  border: 1px solid #E8ECF4 !important;
+  border-radius: 18px;
+}
+
+.app.dark {
+  border: 1px solid #293147 !important;
+  border-radius: 18px;
+}
+
+.app.dark > .topbar {
+  background: #111522 !important;
+}
+
+.app:not(.dark) .rightbar {
+  background: #FFFFFF !important;
+}
+
+html:has(.app.dark),
+body:has(.app.dark) {
+  background: #111522 !important;
+}
+
+/* SONANCE — balanced Music DNA layout */
+@media (min-width: 561px) {
+  .dna-content {
+    align-items: stretch;
+    gap: 11px;
+  }
+
+  .dna-content > .metric {
+    min-height: 116px;
+    padding: 14px 12px;
+    gap: 8px;
+    justify-content: flex-start;
+  }
+
+  .dna-content > .metric small {
+    min-height: 24px;
+    font-size: 9px;
+    font-weight: 500;
+    letter-spacing: .35px;
+    line-height: 1.4;
+  }
+
+  .dna-content > .metric strong {
+    font-size: 13px;
+    font-weight: 550;
+    letter-spacing: -.15px;
+    line-height: 1.35;
+  }
+
+  .dna-content > .metric > span {
+    font-size: 10px;
+    line-height: 1.4;
+  }
+
+  .dna-content > .metric em {
+    font-weight: 400;
+  }
+
+  .dna-content > .traits {
+    height: 100%;
+    min-height: 116px;
+    padding: 8px 0 8px 20px;
+    gap: 10px;
+    justify-content: space-between;
+  }
+
+  .dna-content > .traits div {
+    width: 100%;
+    gap: 8px;
+    align-items: center;
+  }
+
+  .dna-content > .traits span {
+    flex: 1;
+    min-width: 0;
+    font-size: 9px;
+    letter-spacing: 0;
+    line-height: 1.35;
+  }
+
+  .dna-content > .traits strong {
+    flex-shrink: 0;
+    font-size: 11px;
+    font-weight: 500;
+    line-height: 1.35;
+  }
+}
+
+
+/* SONANCE — responsive viewport and content sizing */
+html,
+body,
+#root {
+  width: 100%;
+  min-height: 100%;
+  height: auto;
+}
+
+body {
+  min-height: 100svh;
+}
+
+.app {
+  height: auto;
+  min-height: calc(100svh - 48px);
+  grid-template-rows: 80px auto;
+  overflow: visible;
+}
+
+.landing-page {
+  min-height: 0;
+  height: auto;
+  overflow: visible;
+  padding: clamp(24px, 4vh, 40px) clamp(20px, 5vw, 72px) clamp(36px, 6vh, 64px);
+}
+
+.landing-logo {
+  position: static;
+  margin: 0 auto;
+}
+
+.landing-hero {
+  margin: clamp(32px, 8vh, 92px) auto clamp(32px, 7vh, 76px);
+}
+
+.landing-hero h1 {
+  font-size: clamp(38px, 5.5vw, 76px);
+  overflow-wrap: anywhere;
+}
+
+.landing-description {
+  width: 100%;
+}
+
+.landing-cta {
+  max-width: 100%;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.landing-features {
+  width: 100%;
+}
+
+.landing-feature {
+  min-height: 0;
+  height: 100%;
+  padding: clamp(18px, 2vw, 26px);
+}
+
+@media (max-width: 1000px) {
+  .app {
+    grid-template-rows: 66px auto;
+  }
+
+  .landing-page {
+    grid-column: 2;
+    grid-row: 2;
+  }
+}
+
+@media (max-width: 760px) {
+  .landing-hero {
+    margin: 48px auto 40px;
+  }
+
+  .landing-features {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 560px) {
+  .app {
+    min-height: 100svh;
+  }
+
+  .landing-page {
+    padding: 24px 16px 36px;
+  }
+
+  .landing-hero {
+    margin: 42px auto 36px;
+  }
+
+  .landing-hero h1 {
+    font-size: clamp(36px, 10vw, 52px);
+    letter-spacing: -1.8px;
+  }
+
+  .landing-description {
+    font-size: 14px;
+    line-height: 1.65;
+  }
+
+  .landing-features {
+    gap: 12px;
+  }
+}
+
+@media (min-width: 561px) and (max-height: 760px) {
+  .landing-page {
+    padding-top: 20px;
+    padding-bottom: 32px;
+  }
+
+  .landing-hero {
+    margin-top: clamp(24px, 4vh, 48px);
+    margin-bottom: clamp(24px, 4vh, 48px);
+  }
+}
+
+/* Slightly refined landing headline scale */
+.landing-hero h1 {
+  font-size: clamp(36px, 5.1vw, 70px);
+}
+
+@media (max-width: 560px) {
+  .landing-hero h1 {
+    font-size: clamp(34px, 9vw, 48px);
+  }
+}
+
+/* Fine-tune landing headline */
+.landing-hero h1 {
+  font-size: clamp(35px, 4.9vw, 67px);
+}
+
+@media (max-width: 560px) {
+  .landing-hero h1 {
+    font-size: clamp(33px, 8.7vw, 46px);
+  }
+}
+
+
+/* Final outer frame correction */
+.app {
+  border-radius: 18px;
+  overflow: hidden;
+}
+
+.app:not(.dark) {
+  border: 1px solid #E8ECF4 !important;
+}
+
+.app.dark {
+  border: 1px solid #293147 !important;
+}
+
+@media (max-width: 600px) {
+  .app {
+    border: 0 !important;
+    border-radius: 0;
+    overflow: visible;
+  }
+}
+
+/* Mobile waveform — fewer, clearer bars */
+@media (max-width: 560px) {
+  .player {
+    min-height: 72px;
+    height: auto;
+    padding: 10px 9px;
+  }
+
+  .waveform {
+    height: 50px;
+    min-width: 0;
+  }
+}
+
+/* Music DNA — compact valence / arousal mood map */
+.mood-map {
+  position: relative;
+  width: 100%;
+  min-width: 0;
+  margin: 2px 0 3px;
+  padding-left: 39px;
+  box-sizing: border-box;
+}
+
+.mood-map-plot {
+  position: relative;
+  height: 58px;
+  overflow: hidden;
+  border: 1px solid #e1e7f3;
+  border-radius: 8px;
+  background: linear-gradient(
+    135deg,
+    #e9e7fb 0%,
+    #f1efff 49.8%,
+    #e7f3ff 50.2%,
+    #e5f1ff 100%
+  );
+}
+
+.mood-map-plot::before,
+.mood-map-plot::after {
+  position: absolute;
+  z-index: 1;
+  content: "";
+  pointer-events: none;
+  background: #9aa9c5;
+  opacity: .35;
+}
+
+.mood-map-plot::before {
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 1px;
+}
+
+.mood-map-plot::after {
+  right: 0;
+  left: 0;
+  top: 50%;
+  height: 1px;
+}
+
+.mood-map-quadrant {
+  position: absolute;
+  width: 50%;
+  height: 50%;
+  opacity: .16;
+}
+
+.mood-map-top-left { top: 0; left: 0; background: #a78bfa; }
+.mood-map-top-right { top: 0; right: 0; background: #60a5fa; }
+.mood-map-bottom-left { bottom: 0; left: 0; background: #c4a6d9; }
+.mood-map-bottom-right { right: 0; bottom: 0; background: #7dd3c7; }
+
+.mood-map-point {
+  position: absolute;
+  z-index: 2;
+  width: 10px;
+  height: 10px;
+  transform: translate(-50%, 50%);
+  border: 2px solid #fff;
+  border-radius: 50%;
+  background: #6178f6;
+  box-shadow: 0 1px 5px #4559bd66, 0 0 0 3px #7188f633;
+}
+
+.mood-map-axis {
+  display: flex;
+  justify-content: space-between;
+  gap: 4px;
+  margin-top: 4px;
+  color: #8491aa;
+  font-size: 8px;
+  line-height: 1.2;
+}
+
+.mood-map-arousal {
+  position: absolute;
+  top: 0;
+  bottom: 14px;
+  left: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  color: #8491aa;
+  font-size: 7px;
+  line-height: 1.2;
+}
+
+.app.dark .mood-map-plot {
+  border-color: #39445e;
+  background: linear-gradient(135deg, #302b49 0%, #292943 49.8%, #24364f 50.2%, #20334b 100%);
+}
+
+.app.dark .mood-map-plot::before,
+.app.dark .mood-map-plot::after {
+  background: #9baaca;
+  opacity: .3;
+}
+
+.app.dark .mood-map-axis,
+.app.dark .mood-map-arousal {
+  color: #9ba9c5;
+}
+
+.app.dark .mood-map-point {
+  border-color: #e7ecff;
+  background: #9aabff;
+  box-shadow: 0 1px 6px #0008, 0 0 0 3px #9aabff33;
+}
+
+@media (max-width: 560px) {
+  .mood-map {
+    max-width: 230px;
+  }
+
+  .mood-map-plot {
+    height: 64px;
+  }
+}
+
+/* Compact Music DNA mood map and theme-aware playback control */
+.dna-content > .metric:nth-child(2) {
+  gap: 5px;
+}
+
+.mood-map {
+  margin: 0;
+}
+
+.mood-map-plot {
+  height: 38px;
+}
+
+.app:not(.dark) .play-button {
+  background: linear-gradient(145deg, #8298ff, #9275e8);
+  color: #fff;
+}
+
+.app.dark .play-button {
+  background: linear-gradient(145deg, #7187ff, #7655d9);
+  color: #fff;
+}
+
+/* Final theme-specific Play button colors */
+.app:not(.dark) .play-button {
+  background: linear-gradient(145deg, #91a5ff, #a47be8) !important;
+  color: #fff !important;
+}
+
+.app.dark .play-button {
+  background: linear-gradient(145deg, #5269d8, #49318f) !important;
+  color: #fff !important;
 }

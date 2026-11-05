@@ -2,7 +2,7 @@
 import { useEffect, useRef, useState } from "react";
 import "./App.css";
 
-const API_BASE_URL = (import.meta.env.VITE_API_URL || "http://127.0.0.1:8000").replace(/\/+$/, "");
+const API_BASE_URL = (import.meta.env.VITE_API_URL || (import.meta.env.PROD ? "" : "http://127.0.0.1:8000")).replace(/\/+$/, "");
 
 const stems = [
   { name: "Vocals", icon: "≋", color: "pink", value: 64 },
@@ -12,6 +12,10 @@ const stems = [
 ];
 
 const tabs = ["Overview", "Stems", "Structure", "MIDI", "Similar Tracks", "Learning"];
+
+function setStemGain(gain: GainNode, value: number) {
+  gain.gain.value = value;
+}
 
 function SonanceMark({ animated = false }: { animated?: boolean }) {
   return (
@@ -23,7 +27,7 @@ function SonanceMark({ animated = false }: { animated?: boolean }) {
   );
 }
 
-function PlaybackProgress({
+function Waveform({
   currentTime,
   duration,
   onSeek,
@@ -32,25 +36,40 @@ function PlaybackProgress({
   duration: number;
   onSeek: (time: number) => void;
 }) {
-  const progressRef = useRef<HTMLDivElement | null>(null);
+  const svgRef = useRef<SVGSVGElement | null>(null);
+  const [mobileWaveform, setMobileWaveform] = useState(
+    () => typeof window !== "undefined" && window.matchMedia("(max-width: 560px)").matches
+  );
+
+  useEffect(() => {
+    const media = window.matchMedia("(max-width: 560px)");
+    const update = () => setMobileWaveform(media.matches);
+    media.addEventListener("change", update);
+    return () => media.removeEventListener("change", update);
+  }, []);
+
+  const barCount = mobileWaveform ? 88 : 180;
   const seekAt = (clientX: number) => {
-    const element = progressRef.current;
-    if (!element || duration <= 0) return;
-    const rect = element.getBoundingClientRect();
+    const svg = svgRef.current;
+    if (!svg || duration <= 0) return;
+    const rect = svg.getBoundingClientRect();
     const ratio = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
     onSeek(ratio * duration);
   };
 
   return (
-    <div
-      ref={progressRef}
-      className="playback-progress"
+    <svg
+      ref={svgRef}
+      className="waveform"
+      viewBox="0 0 720 54"
+      preserveAspectRatio="none"
       role="slider"
       aria-label="Audio position"
       aria-valuemin={0}
       aria-valuemax={duration}
       aria-valuenow={currentTime}
       tabIndex={0}
+      style={{ cursor: duration > 0 ? "pointer" : "default", touchAction: "none" }}
       onClick={(event) => seekAt(event.clientX)}
       onPointerDown={(event) => {
         if (duration <= 0) return;
@@ -65,13 +84,29 @@ function PlaybackProgress({
         if (event.key === "ArrowLeft") onSeek(Math.max(0, currentTime - 5));
       }}
     >
-      <span
-        className="playback-progress-fill"
-        style={{ width: duration > 0 ? `${(currentTime / duration) * 100}%` : "0%" }}
-      />
-    </div>
+      {Array.from({ length: barCount }, (_, i) => {
+        const envelope = 7 + Math.sin(i * 0.12) * 8 + Math.sin(i * 0.047) * 10;
+        const noise = Math.abs(Math.sin(i * 12.9898) * Math.cos(i * 4.141));
+        const h = Math.max(3, envelope * noise + 3);
+        const position = i / barCount;
+        const played = duration > 0 && position <= currentTime / duration;
+        return (
+          <line
+            key={i}
+            x1={position * 720 + 2}
+            x2={position * 720 + 2}
+            y1={27 - h}
+            y2={27 + h}
+            stroke={played ? "#b68cff" : `hsl(${210 + (i / 180) * 90} 95% 68%)`}
+            strokeWidth={mobileWaveform ? 3.5 : 1.7}
+            strokeLinecap="round"
+          />
+        );
+      })}
+    </svg>
   );
 }
+
 
 function App() {
   const [dark, setDark] = useState(false);
@@ -95,36 +130,52 @@ function App() {
   const togglePlayback = async () => {
     const mainAudio = audioRef.current;
     if (!mainAudio || !audioUrl) return;
-
     const stemAudios = Object.values(stemAudioRefs.current);
 
     if (mainAudio.paused) {
       try {
-        const audioContext = audioContextRef.current;
-        if (audioContext) await audioContext.resume();
+        if (audioContextRef.current) await audioContextRef.current.resume();
+        mainAudio.muted = stemAudios.length > 0;
 
-        mainAudio.volume = stemAudios.length > 0 ? 0 : 1;
-        await Promise.all(stemAudios.map(async (audio) => {
-          audio.currentTime = mainAudio.currentTime;
-          await audio.play();
-        }));
+        if (stemAudios.length > 0) {
+          const results = await Promise.all(stemAudios.map(async (audio) => {
+            try {
+              audio.currentTime = mainAudio.currentTime;
+              await audio.play();
+              return true;
+            } catch {
+              audio.pause();
+              return false;
+            }
+          }));
+          if (!results.some(Boolean)) {
+            mainAudio.muted = false;
+            setPlaying(false);
+            setAnalysisError("The separated stems could not be played on this device.");
+            return;
+          }
+          setAnalysisError(results.some((ok) => !ok) ? "Some separated layers could not be started." : "");
+        }
+
         await mainAudio.play();
         setPlaying(true);
       } catch {
         mainAudio.pause();
+        mainAudio.muted = false;
         stemAudios.forEach((audio) => audio.pause());
         setPlaying(false);
         setAnalysisError("Unable to play this audio file or its separated stems.");
       }
     } else {
       mainAudio.pause();
+      mainAudio.muted = false;
       stemAudios.forEach((audio) => audio.pause());
       setPlaying(false);
     }
   };
 
 
-  const [activeMenu, setActiveMenu] = useState("Analyze");
+  const [activeMenu, setActiveMenu] = useState("Analysis");
   const [levels, setLevels] = useState(stems.map(() => 100));
 const [mutedStems, setMutedStems] = useState<string[]>([]);
   const [fileName, setFileName] = useState("");
@@ -153,6 +204,8 @@ const [genreResult, setGenreResult] = useState<{
 
 
   useEffect(() => {
+    const mainAudio = audioRef.current;
+    const mainAudioSrc = mainAudio?.src;
     return () => {
       Object.values(stemAudioRefs.current).forEach((audio) => {
         audio.pause();
@@ -162,12 +215,12 @@ const [genreResult, setGenreResult] = useState<{
       stemAudioRefs.current = {};
       stemGainRefs.current = {};
 
-      if (audioRef.current) {
-        audioRef.current.pause();
-        audioRef.current.removeAttribute("src");
-        audioRef.current.load();
-        if (audioRef.current.src.startsWith("blob:")) {
-          URL.revokeObjectURL(audioRef.current.src);
+      if (mainAudio) {
+        mainAudio.pause();
+        mainAudio.removeAttribute("src");
+        mainAudio.load();
+        if (mainAudioSrc?.startsWith("blob:")) {
+          URL.revokeObjectURL(mainAudioSrc);
         }
       }
 
@@ -177,6 +230,59 @@ const [genreResult, setGenreResult] = useState<{
       }
     };
   }, []);
+
+useEffect(() => {
+  const controller = new AbortController();
+  const loadDemo = async () => {
+    try {
+      setAnalyzing(true);
+      const response = await fetch(`${API_BASE_URL}/demo`, { signal: controller.signal });
+      if (!response.ok) throw new Error("Demo track unavailable");
+      const data = await response.json();
+      if (controller.signal.aborted) return;
+      const stemNames = ["vocals", "drums", "bass", "other"];
+      const audioContext = audioContextRef.current ?? new AudioContext();
+      audioContextRef.current = audioContext;
+      const newStemAudios: Record<string, HTMLAudioElement> = {};
+      stemNames.forEach((name) => {
+        const audio = new Audio();
+        audio.crossOrigin = "anonymous";
+        audio.preload = "auto";
+        audio.src = `${API_BASE_URL}/stems/${data.track_id}/${name}`;
+        audio.volume = 1;
+        const source = audioContext.createMediaElementSource(audio);
+        const gain = audioContext.createGain();
+        gain.gain.value = 1;
+        source.connect(gain);
+        gain.connect(audioContext.destination);
+        stemGainRefs.current[name] = gain;
+        newStemAudios[name] = audio;
+      });
+      if (controller.signal.aborted) return;
+      stemAudioRefs.current = newStemAudios;
+      setAudioUrl(`${API_BASE_URL}/demo/audio`);
+      setFileName("Metric - Help I'm Alive.mp3");
+      setTrackTitle(data.title || "Help I'm Alive");
+      setTrackArtist(data.artist || "Metric");
+      setCoverUrl(data.cover_url || null);
+      setGenreResult(data);
+      setCurrentTime(0);
+      setDuration(0);
+      setPlaying(false);
+      setMutedStems([]);
+      setLevels(stems.map(() => 100));
+      setAnalysisError("");
+    } catch (error) {
+      if (!controller.signal.aborted) {
+        setAnalysisError(error instanceof Error ? error.message : "Demo loading failed");
+      }
+    } finally {
+      if (!controller.signal.aborted) setAnalyzing(false);
+    }
+  };
+  void loadDemo();
+  return () => controller.abort();
+}, []);
 
 const handleUpload = async (file?: File) => {
   if (!file) return;
@@ -231,11 +337,10 @@ const handleUpload = async (file?: File) => {
     audioContextRef.current = audioContext;
 
     stemNames.forEach((name) => {
-      const audio = new Audio(
-        `${API_BASE_URL}/stems/${data.track_id}/${name}`
-      );
+      const audio = new Audio();
       audio.crossOrigin = "anonymous";
       audio.preload = "auto";
+      audio.src = `${API_BASE_URL}/stems/${data.track_id}/${name}`;
       audio.volume = 1;
 
       const source = audioContext.createMediaElementSource(audio);
@@ -251,7 +356,7 @@ const handleUpload = async (file?: File) => {
     stemAudioRefs.current = newStemAudios;
     setGenreResult(data);
     setTrackTitle(data.title || file.name.replace(/\\.[^.]+$/, ""));
-    setTrackArtist(data.artist || "Artist not tagged");
+    setTrackArtist(data.artist || "Artist information unavailable");
     setCoverUrl(data.cover_url || null);
   } catch (error) {
     setAnalysisError(
@@ -276,19 +381,17 @@ const handleUpload = async (file?: File) => {
         <nav className="nav">
           {[
             ["⌂", "Home"],
-            ["♬", "Analyze"],
+            ["♬", "Analysis"],
             ["♧", "Learn"],
-            ["◉", "Explore"],
-            ["▱", "Library"],
           ].map(([icon, label]) => (
             <button
               key={label}
               className={`nav-item ${activeMenu === label ? "selected" : ""}`}
-              disabled={label === "Learn" || label === "Explore" || label === "Library"}
-              title={label === "Learn" || label === "Explore" || label === "Library" ? "In development" : undefined}
+              disabled={label === "Learn"}
+              title={label === "Learn" ? "Coming in the next version" : undefined}
               onClick={() => {
                 setActiveMenu(label);
-                if (label === "Analyze") {
+                if (label === "Analysis") {
                   document.getElementById("upload")?.click();
                 }
               }}
@@ -307,6 +410,7 @@ const handleUpload = async (file?: File) => {
       </aside>
 
       <header className="topbar">
+        {activeMenu !== "Home" && <button type="button" className="back-link" onClick={() => setActiveMenu("Home")}><span className="back-chevron" aria-hidden="true" /><span>Back home</span></button>}
         <div className="top-actions">
           <button className="icon-button theme-toggle" onClick={() => setDark(!dark)} title="Switch theme">
             {dark ? "☀" : "☾"}
@@ -332,7 +436,7 @@ const handleUpload = async (file?: File) => {
             </p>
             <button
               className="landing-cta"
-              onClick={() => setActiveMenu("Analyze")}
+              onClick={() => setActiveMenu("Analysis")}
             >
               Explore your music <span>→</span>
             </button>
@@ -359,9 +463,6 @@ const handleUpload = async (file?: File) => {
       ) : (
         <main className="main-content">
         <div className="track-heading">
-          <button type="button" className="back-link" onClick={() => document.getElementById("upload")?.click()}>
-            ← <span>Choose another track</span>
-          </button>
           <div className="track-info">
             <div className="cover-art">
               {coverUrl ? (
@@ -373,16 +474,13 @@ const handleUpload = async (file?: File) => {
             </div>
             <div className="track-details">
               <h1>{trackTitle || "No track selected"}</h1>
-              <p className="artist">{trackArtist || (fileName ? "Artist not tagged" : "Upload audio to begin")}</p>
+              <p className="artist">{trackArtist || (fileName ? "Artist information unavailable" : "Upload audio to begin")}</p>
               <div className="track-meta">
                 <span>◷ &nbsp;{formatTime(duration)}</span><span>♧ &nbsp;{genreResult?.bpm != null ? `${Math.round(genreResult.bpm)} BPM` : "BPM —"}</span><span>♬ &nbsp;{genreResult?.key ?? "Key —"}</span>
                 <span>♧ &nbsp;{genreResult?.genre ?? "Genre pending"}</span>
                 <span>♡ &nbsp;{genreResult?.subgenre ?? "Subgenre pending"}</span>
               </div>
             </div>
-            <button className="save-button" type="button" disabled title="Library is in development">
-              Library · In development
-            </button>
           </div>
         </div>
 
@@ -392,13 +490,17 @@ const handleUpload = async (file?: File) => {
             src={audioUrl ?? undefined}
             onLoadedMetadata={(e) => setDuration(e.currentTarget.duration)}
             onTimeUpdate={(e) => setCurrentTime(e.currentTarget.currentTime)}
-            onEnded={() => setPlaying(false)}
+            onEnded={() => {
+              Object.values(stemAudioRefs.current).forEach((audio) => audio.pause());
+              if (audioRef.current) audioRef.current.muted = false;
+              setPlaying(false);
+            }}
             hidden
           />
           <button className="play-button" onClick={togglePlayback} disabled={!audioUrl} aria-label={playing ? "Pause" : "Play"}>
-            {playing ? "Ⅱ" : "▶"}
+            <span className={`play-icon ${playing ? "is-playing" : ""}`} aria-hidden="true" />
           </button>
-          <PlaybackProgress
+          <Waveform
             currentTime={currentTime}
             duration={duration}
             onSeek={(time) => {
@@ -536,15 +638,14 @@ const handleUpload = async (file?: File) => {
               <span className="section-symbol">✦</span>
               <div>
                 <h2>{activeTab}</h2>
-                <p>{activeTab === "Stems" ? "Real separated audio from the current analysis" : "This module is not connected yet"}</p>
+                <p>{activeTab === "Stems" ? "Separated audio stems from this track" : "This module is not connected yet"}</p>
               </div>
             </div>
             {activeTab === "Stems" ? (
-              genreResult ? (
-                <p>Use the stem mixer in the right panel to mute layers and adjust their levels.</p>
-              ) : (
-                <p>Upload a track and wait for separation to finish. Available stems will appear in the right panel.</p>
-              )
+              <div className="development-message">
+                <span className="development-tag">IN DEVELOPMENT</span>
+                <p>Detailed per-stem analysis and a dedicated mixing workspace are still being developed. Basic controls for currently available separated layers remain in the right-side panel.</p>
+              </div>
             ) : (
               <div className="development-message">
                 <span className="development-tag">IN DEVELOPMENT</span>
@@ -602,10 +703,12 @@ const handleUpload = async (file?: File) => {
                     const audio = stemAudioRefs.current[stemFile];
                     const gain = stemGainRefs.current[stemFile];
                     if (audio && gain) {
-                      gain.gain.value =
+                      setStemGain(
+                        gain,
                         nextMuted.includes(stem.name) || levels[i] === 0
                           ? 0
-                          : levels[i] / 100;
+                          : levels[i] / 100
+                      );
                     }
                   }}
                 >
@@ -627,10 +730,12 @@ const handleUpload = async (file?: File) => {
                     const audio = stemFile ? stemAudioRefs.current[stemFile] : undefined;
                     const gain = stemFile ? stemGainRefs.current[stemFile] : undefined;
                     if (audio && gain) {
-                      gain.gain.value =
+                      setStemGain(
+                        gain,
                         level === 0 || mutedStems.includes(stem.name)
                           ? 0
-                          : level / 100;
+                          : level / 100
+                      );
                     }
                     if (level === 0 && !mutedStems.includes(stem.name)) {
                       setMutedStems((previous) => [...previous, stem.name]);

@@ -2,7 +2,7 @@
 import { useEffect, useRef, useState } from "react";
 import "./App.css";
 
-const API_BASE_URL = (import.meta.env.VITE_API_URL || (import.meta.env.PROD ? "" : "http://127.0.0.1:8000")).replace(/\/+$/, "");
+const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || (import.meta.env.PROD ? "" : "http://127.0.0.1:8000")).replace(/\/+$/, "");
 
 const stems = [
   { name: "Vocals", icon: "≋", color: "pink", value: 64 },
@@ -230,59 +230,6 @@ const [genreResult, setGenreResult] = useState<{
       }
     };
   }, []);
-
-useEffect(() => {
-  const controller = new AbortController();
-  const loadDemo = async () => {
-    try {
-      setAnalyzing(true);
-      const response = await fetch(`${API_BASE_URL}/demo`, { signal: controller.signal });
-      if (!response.ok) throw new Error("Demo track unavailable");
-      const data = await response.json();
-      if (controller.signal.aborted) return;
-      const stemNames = ["vocals", "drums", "bass", "other"];
-      const audioContext = audioContextRef.current ?? new AudioContext();
-      audioContextRef.current = audioContext;
-      const newStemAudios: Record<string, HTMLAudioElement> = {};
-      stemNames.forEach((name) => {
-        const audio = new Audio();
-        audio.crossOrigin = "anonymous";
-        audio.preload = "auto";
-        audio.src = `${API_BASE_URL}/stems/${data.track_id}/${name}`;
-        audio.volume = 1;
-        const source = audioContext.createMediaElementSource(audio);
-        const gain = audioContext.createGain();
-        gain.gain.value = 1;
-        source.connect(gain);
-        gain.connect(audioContext.destination);
-        stemGainRefs.current[name] = gain;
-        newStemAudios[name] = audio;
-      });
-      if (controller.signal.aborted) return;
-      stemAudioRefs.current = newStemAudios;
-      setAudioUrl(`${API_BASE_URL}/demo/audio`);
-      setFileName("Metric - Help I'm Alive.mp3");
-      setTrackTitle(data.title || "Help I'm Alive");
-      setTrackArtist(data.artist || "Metric");
-      setCoverUrl(data.cover_url || null);
-      setGenreResult(data);
-      setCurrentTime(0);
-      setDuration(0);
-      setPlaying(false);
-      setMutedStems([]);
-      setLevels(stems.map(() => 100));
-      setAnalysisError("");
-    } catch (error) {
-      if (!controller.signal.aborted) {
-        setAnalysisError(error instanceof Error ? error.message : "Demo loading failed");
-      }
-    } finally {
-      if (!controller.signal.aborted) setAnalyzing(false);
-    }
-  };
-  void loadDemo();
-  return () => controller.abort();
-}, []);
 
 const handleUpload = async (file?: File) => {
   if (!file) return;

@@ -5,6 +5,7 @@ import logging
 import os
 import re
 import shutil
+import sys
 import subprocess
 import threading
 import time
@@ -22,22 +23,42 @@ from src.storage_cleanup import cleanup_expired_uploads
 
 PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
 
-ESSENTIA_ENV = os.path.join(PROJECT_ROOT, ".venv-essentia", "bin", "python")
+ESSENTIA_ENV = os.getenv(
+    "ESSENTIA_PYTHON",
+    os.path.join(PROJECT_ROOT, ".venv-essentia", "bin", "python"),
+)
+DEMUCS_ENV = os.getenv(
+    "DEMUCS_PYTHON",
+    os.path.join(PROJECT_ROOT, ".venv", "bin", "python"),
+)
 ESSENTIA_ROOT = PROJECT_ROOT
 UPLOADS_DIR = os.path.join(PROJECT_ROOT, "uploads")
 SEPARATED_DIR = os.path.join(PROJECT_ROOT, "separated")
 
 ESSENTIA_ENV_VARS = os.environ.copy()
 
-essentia_library_dir = os.path.join(PROJECT_ROOT, "essentia-local", "lib")
-essentia_site_packages = os.path.join(
-    PROJECT_ROOT, "essentia-local", "lib", "python3.11", "site-packages"
+essentia_library_dir = os.getenv(
+    "ESSENTIA_LIBRARY_DIR",
+    os.path.join(PROJECT_ROOT, "essentia-local", "lib"),
 )
-
-ESSENTIA_ENV_VARS["DYLD_LIBRARY_PATH"] = os.pathsep.join(
-    filter(None, [essentia_library_dir, ESSENTIA_ENV_VARS.get("DYLD_LIBRARY_PATH")])
+essentia_site_packages = os.getenv(
+    "ESSENTIA_SITE_PACKAGES",
+    os.path.join(
+        PROJECT_ROOT, "essentia-local", "lib", "python3.11", "site-packages"
+    ),
 )
-
+library_path_variable = (
+    "DYLD_LIBRARY_PATH" if sys.platform == "darwin" else "LD_LIBRARY_PATH"
+)
+ESSENTIA_ENV_VARS[library_path_variable] = os.pathsep.join(
+    filter(
+        None,
+        [
+            essentia_library_dir,
+            ESSENTIA_ENV_VARS.get(library_path_variable),
+        ],
+    )
+)
 ESSENTIA_ENV_VARS["PYTHONPATH"] = os.pathsep.join(
     filter(
         None,
@@ -233,7 +254,7 @@ def analyze_genre(audio_path: str) -> dict:
     return json.loads(lines[-1])
 
 
-logger = logging.getLogger("sonance.storage")
+logger = logging.getLogger("sonance.api")
 
 ACTIVE_TRACK_IDS: set[str] = set()
 ACTIVE_DOWNLOADS: dict[str, int] = {}
@@ -295,7 +316,7 @@ app.add_middleware(
     allow_origins=[
         origin.strip().rstrip("/")
         for origin in os.getenv(
-            "CORS_ORIGINS", "http" + "://" + "localhost:5173"
+            "CORS_ORIGINS", "http://localhost:5173"
         ).split(",")
         if origin.strip()
     ],
@@ -355,7 +376,7 @@ async def analyze_audio(file: UploadFile = File(...)):  # noqa: B008
             extract_track_metadata, temp_path, original_filename
         )
 
-        demucs_python = os.path.join(PROJECT_ROOT, ".venv", "bin", "python")
+        demucs_python = DEMUCS_ENV
         await asyncio.to_thread(
             subprocess.run,
             [

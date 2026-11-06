@@ -46,7 +46,16 @@ Model weights and generated audio are intentionally excluded from version contro
 - `models/musicnn/msd-musicnn-1.pb`
 - `models/deam/deam-msd-musicnn-2.pb`
 
-The backend currently expects the Essentia interpreter at `.venv-essentia/bin/python` and the Demucs interpreter at `.venv/bin/python`. Configure these environments and install their runtime dependencies before starting the API.
+By default, the API uses `.venv-essentia/bin/python` for Essentia and `.venv/bin/python` for Demucs. Override these paths with `ESSENTIA_PYTHON` and `DEMUCS_PYTHON` when your environments live elsewhere.
+
+Optional environment variables:
+
+- `ESSENTIA_LIBRARY_DIR` — directory containing Essentia shared libraries (defaults to `essentia-local/lib`).
+- `ESSENTIA_SITE_PACKAGES` — Essentia Python packages directory (defaults to the local Python 3.11 site-packages path).
+- `CORS_ORIGINS` — comma-separated list of allowed frontend origins (defaults to `http://localhost:5173`).
+- `VITE_API_BASE_URL` — frontend API origin; leave unset to use the same origin in production or the local API default during development.
+
+Configure the environments and install their runtime dependencies before starting the API.
 
 ## Frontend development
 

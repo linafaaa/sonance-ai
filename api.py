@@ -84,7 +84,7 @@ class RequestSizeLimitMiddleware:
                 response = JSONResponse(
                     status_code=413,
                     content={
-                        "detail": "Запрос слишком большой. Максимальный размер аудиофайла — 50 МБ."
+                        "detail": "Request body is too large. The maximum audio file size is 50 MB."
                     },
                 )
                 await response(scope, receive, send)
@@ -101,7 +101,7 @@ class RequestSizeLimitMiddleware:
                 if received_size > self.max_request_size:
                     raise HTTPException(
                         status_code=413,
-                        detail="Запрос слишком большой. Максимальный размер аудиофайла — 50 МБ.",
+                        detail="Request body is too large. The maximum audio file size is 50 MB.",
                     )
 
             return message
@@ -312,7 +312,7 @@ def health():
 @app.post("/analyze/genre")
 async def analyze_audio(file: UploadFile = File(...)):  # noqa: B008
     if not file.filename:
-        raise HTTPException(status_code=400, detail="Файл не выбран")
+        raise HTTPException(status_code=400, detail="No file was selected.")
 
     original_filename = os.path.basename(file.filename)
     suffix = os.path.splitext(original_filename)[1]
@@ -331,7 +331,7 @@ async def analyze_audio(file: UploadFile = File(...)):  # noqa: B008
     if not ANALYSIS_SEMAPHORE.acquire(blocking=False):
         raise HTTPException(
             status_code=503,
-            detail="Сервер уже анализирует другой трек. Попробуйте позже.",
+            detail="The server is already processing another track. Please try again later.",
         )
 
     with TRACKS_LOCK:
@@ -387,7 +387,7 @@ async def analyze_audio(file: UploadFile = File(...)):  # noqa: B008
     except UploadTooLargeError as exc:
         raise HTTPException(
             status_code=413,
-            detail="Файл слишком большой. Максимальный размер — 50 МБ.",
+            detail="The file is too large. The maximum file size is 50 MB.",
         ) from exc
 
     except InvalidAudioFileError as exc:
@@ -401,7 +401,7 @@ async def analyze_audio(file: UploadFile = File(...)):  # noqa: B008
 
         raise HTTPException(
             status_code=415,
-            detail="Файл не является поддерживаемым аудио или повреждён.",
+            detail="The file is not a supported audio format or is corrupted.",
         ) from exc
 
     except Exception as exc:
@@ -421,9 +421,9 @@ async def analyze_audio(file: UploadFile = File(...)):  # noqa: B008
         raise HTTPException(
             status_code=504 if timed_out else 500,
             detail=(
-                "Превышено время ожидания анализа. Попробуйте другой файл позже."
+                "Audio analysis timed out. Please try another file later."
                 if timed_out
-                else "Не удалось проанализировать аудио. Попробуйте другой файл или повторите попытку позже."
+                else "Audio analysis failed. Please try another file or try again later."
             ),
         ) from exc
 

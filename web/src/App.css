@@ -585,9 +585,6 @@ footer span { font-weight: 400; }
   footer { line-height: 1.6; }
 }
 
-
-/* SONANCE — corrected responsive layout */
-
 html {
   min-width: 360px;
   overflow-x: clip;
@@ -842,8 +839,6 @@ body {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
-
-/* SONANCE — reference-inspired brand system */
 
 :root {
   --bg: #F5F7FB;
@@ -1218,7 +1213,6 @@ body {
   text-align: left;
 }
 
-/* Reference-inspired light workspace hierarchy */
 .app:not(.dark) .main-content {
   background: #FFFFFF;
 }
@@ -1244,7 +1238,6 @@ body {
   background: #F8F9FC;
 }
 
-/* Final override: right panel matches the white main area */
 .app:not(.dark) .rightbar {
   background: #FFFFFF !important;
 }
@@ -1422,7 +1415,6 @@ body {
   }
 }
 
-/* Pin the landing logo to the top center of the page */
 .landing-logo {
   position: absolute;
   top: 18px;
@@ -1440,7 +1432,6 @@ body {
   margin-top: 100px;
 }
 
-/* Restore original landing logo position */
 .landing-logo {
   position: static;
   transform: none;
@@ -1529,7 +1520,6 @@ body {
   outline: none !important;
 }
 
-/* Music DNA layout fix */
 @media (min-width: 1351px) {
   .dna-content {
     grid-template-columns: repeat(5, minmax(0, 1fr)) minmax(190px, 1.5fr);
@@ -1568,7 +1558,6 @@ body {
     overflow-wrap: normal;
   }
 }
-
 
 /* SONANCE three-bar identity */
 .sonance-mark {
@@ -1712,7 +1701,6 @@ body {
   inset: 0 0 0 var(--sonance-sidebar-width);
 }
 
-
 /* Honest empty states and real-audio playback progress */
 .nav-item:disabled {
   opacity: 0.42;
@@ -1829,7 +1817,6 @@ body {
 .play-icon { display: block; width: 0; height: 0; border-top: 7px solid transparent; border-bottom: 7px solid transparent; border-left: 11px solid #fff; transform: translateX(1.5px); }
 .play-icon.is-playing { width: 12px; height: 14px; border: 0; transform: none; background: linear-gradient(to right, #fff 0 4px, transparent 4px 8px, #fff 8px 12px); }
 
-/* SONANCE visual polish */
 .metric { align-items:flex-start; gap:8px; padding:15px 13px; border-radius:14px; text-align:left; }
 .metric small { color:#7486a7; font-size:10px; font-weight:400; letter-spacing:0; line-height:1.35; }
 .metric strong { color:#202e4b; font-size:11px; font-weight:500; letter-spacing:0; line-height:1.25; overflow-wrap:anywhere; }
@@ -1856,8 +1843,6 @@ body {
 .dark .back-link:hover { border-color:#50558a; background:#292d49; color:#c6c9ff; }
 @media (max-width:560px) { .traits { border-left:0; padding-left:0; } .metric { padding:12px 10px; } .metric strong { font-size:14px; } .development-panel { padding:24px 16px; } .development-panel h2 { font-size:15px; } }
 
-
-/* Final responsive and theme corrections */
 .app, .app button, .app input { font-family: 'Inter', sans-serif; }
 .app h1, .app h2, .app .brand, .app .development-panel h2 { font-family: 'Manrope', sans-serif; }
 .app .track-details h1 { font-family: 'Manrope', sans-serif; font-weight: 600; }
@@ -1945,8 +1930,6 @@ body:has(.app:not(.dark)) { background: #E9EDF4; }
 .app.dark .rightbar { background: #111725 !important; border-color: #293147 !important; }
 .app.dark .topbar { border-bottom: 1px solid #293147 !important; }
 
-
-/* Unified outer frame — restore original light appearance */
 .app:not(.dark) {
   border: 1px solid #E8ECF4 !important;
   border-radius: 18px;
@@ -2037,7 +2020,6 @@ body:has(.app.dark) {
     line-height: 1.35;
   }
 }
-
 
 /* SONANCE — responsive viewport and content sizing */
 html,
@@ -2161,7 +2143,6 @@ body {
   }
 }
 
-/* Slightly refined landing headline scale */
 .landing-hero h1 {
   font-size: clamp(36px, 5.1vw, 70px);
 }
@@ -2172,7 +2153,6 @@ body {
   }
 }
 
-/* Fine-tune landing headline */
 .landing-hero h1 {
   font-size: clamp(35px, 4.9vw, 67px);
 }
@@ -2183,8 +2163,6 @@ body {
   }
 }
 
-
-/* Final outer frame correction */
 .app {
   border-radius: 18px;
   overflow: hidden;

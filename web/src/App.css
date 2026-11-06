@@ -1825,16 +1825,7 @@ body {
   color: #a0a9bf;
 }
 
-/* Temporary layout alignment check */
-@media (min-width: 1001px) {
-  .app { grid-template-rows: 80px minmax(0, 1fr); }
-  .main-content, .rightbar { align-self: stretch; }
-}
-
-
-
-/* Geometrically centered player controls */
-.play-button { background: linear-gradient(145deg, #7187ff, #7655d9) !important; color: #fff; }
+/* Playback control geometry */
 .play-icon { display: block; width: 0; height: 0; border-top: 7px solid transparent; border-bottom: 7px solid transparent; border-left: 11px solid #fff; transform: translateX(1.5px); }
 .play-icon.is-playing { width: 12px; height: 14px; border: 0; transform: none; background: linear-gradient(to right, #fff 0 4px, transparent 4px 8px, #fff 8px 12px); }
 
@@ -2371,22 +2362,11 @@ body {
 }
 
 .app:not(.dark) .play-button {
-  background: linear-gradient(145deg, #8298ff, #9275e8);
+  background: linear-gradient(145deg, #91a5ff, #a47be8);
   color: #fff;
 }
 
 .app.dark .play-button {
-  background: linear-gradient(145deg, #7187ff, #7655d9);
+  background: linear-gradient(145deg, #5269d8, #49318f);
   color: #fff;
-}
-
-/* Final theme-specific Play button colors */
-.app:not(.dark) .play-button {
-  background: linear-gradient(145deg, #91a5ff, #a47be8) !important;
-  color: #fff !important;
-}
-
-.app.dark .play-button {
-  background: linear-gradient(145deg, #5269d8, #49318f) !important;
-  color: #fff !important;
 }

@@ -2,6 +2,8 @@
 
 SONANCE AI is a web application for exploring the structure and measurable characteristics of audio tracks. It combines model-based music analysis with source-separated playback in a single workspace.
 
+**Live demo:** [sonance-ai.duckdns.org](https://sonance-ai.duckdns.org/)
+
 ## Capabilities
 
 - Upload an audio track for analysis (maximum file size: 50 MB).
